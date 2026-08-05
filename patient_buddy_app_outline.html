@@ -1,0 +1,823 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PatientBuddy — How It Works</title>
+<style>
+:root{
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --bg-page:#f3f4f6; --surface-0:#ffffff; --surface-2:#f1f2f5;
+  --text-primary:#16171b; --text-secondary:#5b5d66; --text-muted:#9799a3;
+  --text-accent:#0c8f81; --text-warning:#9a5f0a; --text-success:#1f8a4c; --text-danger:#bf3b3b;
+  --border:#e3e4e9; --border-strong:#d2d4db; --border-accent:#0c8f8155;
+  --fill-accent:#0f9c8c; --on-accent:#ffffff;
+  --bg-accent:#0c8f8117; --bg-warning:#9a5f0a17; --bg-success:#1f8a4c17; --bg-danger:#bf3b3b17;
+  --radius:10px; --diagram-ink:#16171b;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg-page:#0a0b0d; --surface-0:#101113; --surface-2:#191a1d;
+    --text-primary:#f1f2f4; --text-secondary:#a3a5ad; --text-muted:#6c6e77;
+    --text-accent:#2bc7b5; --text-warning:#e3a34a; --text-success:#3fcc7c; --text-danger:#ee6a6a;
+    --border:#2a2b2f; --border-strong:#37383e; --border-accent:#2bc7b555;
+    --fill-accent:#1fae9d; --on-accent:#04211d;
+    --bg-accent:#2bc7b51f; --bg-warning:#e3a34a1f; --bg-success:#3fcc7c1f; --bg-danger:#ee6a6a1f;
+    --diagram-ink:#f1f2f4;
+  }
+}
+:root[data-theme="dark"]{
+  --bg-page:#0a0b0d; --surface-0:#101113; --surface-2:#191a1d;
+  --text-primary:#f1f2f4; --text-secondary:#a3a5ad; --text-muted:#6c6e77;
+  --text-accent:#2bc7b5; --text-warning:#e3a34a; --text-success:#3fcc7c; --text-danger:#ee6a6a;
+  --border:#2a2b2f; --border-strong:#37383e; --border-accent:#2bc7b555;
+  --fill-accent:#1fae9d; --on-accent:#04211d;
+  --bg-accent:#2bc7b51f; --bg-warning:#e3a34a1f; --bg-success:#3fcc7c1f; --bg-danger:#ee6a6a1f;
+  --diagram-ink:#f1f2f4;
+}
+:root[data-theme="light"]{
+  --bg-page:#f3f4f6; --surface-0:#ffffff; --surface-2:#f1f2f5;
+  --text-primary:#16171b; --text-secondary:#5b5d66; --text-muted:#9799a3;
+  --text-accent:#0c8f81; --text-warning:#9a5f0a; --text-success:#1f8a4c; --text-danger:#bf3b3b;
+  --border:#e3e4e9; --border-strong:#d2d4db; --border-accent:#0c8f8155;
+  --fill-accent:#0f9c8c; --on-accent:#ffffff;
+  --bg-accent:#0c8f8117; --bg-warning:#9a5f0a17; --bg-success:#1f8a4c17; --bg-danger:#bf3b3b17;
+  --diagram-ink:#16171b;
+}
+*{box-sizing:border-box}
+body{font-family:var(--font-sans);background:var(--bg-page);color:var(--text-primary);margin:0;padding:0}
+.page{max-width:1180px;margin:0 auto;padding:32px 20px 80px}
+.masthead{max-width:640px;margin:0 auto 28px;text-align:center}
+.masthead h1{font-size:26px;font-weight:650;margin:0 0 6px;text-wrap:balance}
+.masthead p{font-size:14px;color:var(--text-secondary);margin:0;line-height:1.5}
+.icon{display:inline-flex;width:1em;height:1em}
+.icon svg{width:100%;height:100%}
+.tabnav{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:28px}
+.tabnav button{font:inherit;font-size:13px;font-weight:500;padding:8px 16px;border-radius:20px;border:1px solid var(--border-strong);background:var(--surface-0);color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;gap:6px}
+.tabnav button.active{border-color:var(--text-accent);color:var(--text-accent);background:var(--bg-accent)}
+.stage{display:flex;gap:36px;align-items:flex-start;justify-content:center;flex-wrap:wrap;margin-bottom:56px}
+.phone{width:322px;flex-shrink:0;border:2px solid var(--border-strong);border-radius:34px;overflow:hidden;background:var(--surface-0);box-shadow:0 20px 45px -20px rgba(0,0,0,.35);position:relative}
+.screen{display:none;flex-direction:column;min-height:600px;position:relative}
+.screen.active{display:flex}
+.status-bar{padding:10px 20px 6px;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text-muted)}
+.status-bar .icons{display:flex;gap:6px}
+.top-bar{padding:10px 16px 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid var(--border);min-height:20px}
+.top-bar .title{font-size:15px;font-weight:600;color:var(--text-primary)}
+.top-bar .back{font-size:13px;color:var(--text-accent);cursor:pointer;display:flex;align-items:center;gap:2px;background:none;border:none;font-family:inherit;padding:0}
+.top-bar .iconbtn{background:none;border:none;color:var(--text-secondary);cursor:pointer;padding:2px;display:flex}
+.content{flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.nav{display:flex;border-top:0.5px solid var(--border);background:var(--surface-2)}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px 10px;cursor:pointer;font-size:10px;color:var(--text-muted);border:none;background:none;font-family:inherit}
+.nav-item.active{color:var(--text-accent)}
+.nav-item .icon{font-size:20px}
+.card{background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:14px}
+.card-title{font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:4px}
+.card-sub{font-size:12px;color:var(--text-secondary);line-height:1.5}
+.btn{width:100%;padding:11px;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;text-align:center;border:0.5px solid var(--border-strong);background:var(--surface-2);color:var(--text-primary);font-family:inherit}
+.btn.primary{background:var(--fill-accent);color:var(--on-accent);border-color:transparent}
+.btn.danger{background:var(--bg-danger);color:var(--text-danger);border-color:transparent}
+.btn.ghost{border:none;background:none;color:var(--text-accent);font-size:13px;padding:6px;width:auto}
+.row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border)}
+.row:last-child{border-bottom:none}
+.row .icon{font-size:18px;color:var(--text-secondary);width:22px;flex-shrink:0}
+.row-text{flex:1;min-width:0}
+.row-label{font-size:13px;color:var(--text-primary);font-weight:500}
+.row-sub{font-size:11px;color:var(--text-secondary);margin-top:1px}
+.row-right{font-size:12px;color:var(--text-muted);flex-shrink:0}
+.badge{display:inline-block;font-family:inherit;font-size:10px;padding:2px 8px;border-radius:20px;background:var(--bg-accent);color:var(--text-accent);font-weight:600;white-space:nowrap;border:none;cursor:default}
+.badge.warn{background:var(--bg-warning);color:var(--text-warning)}
+.badge.ok{background:var(--bg-success);color:var(--text-success)}
+.section-label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+.avatar{width:36px;height:36px;border-radius:50%;background:var(--bg-accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--text-accent);flex-shrink:0}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:5px 10px;border-radius:20px;border:0.5px solid var(--border-strong);color:var(--text-secondary);cursor:pointer;margin-right:6px;margin-bottom:6px;background:none;font-family:inherit;white-space:nowrap}
+.chip.active{border-color:var(--text-accent);color:var(--text-accent);background:var(--bg-accent)}
+.voice-btn{width:72px;height:72px;border-radius:50%;background:var(--fill-accent);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;margin:0 auto;color:var(--on-accent)}
+.voice-btn .icon{font-size:30px}
+.tabs{display:flex;border-bottom:0.5px solid var(--border);margin-bottom:8px}
+.tab{flex:1;padding:8px;text-align:center;font-size:12px;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;background:none;font-family:inherit}
+.tab.active{color:var(--text-accent);border-bottom-color:var(--fill-accent)}
+.nav-label{font-size:10px;margin-top:2px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em}
+.field input{font:inherit;font-size:14px;padding:9px 10px;border-radius:8px;border:0.5px solid var(--border-strong);background:var(--surface-0);color:var(--text-primary)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.lockwrap{position:absolute;inset:0;z-index:5;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:var(--surface-0);text-align:center;padding:24px}
+.lockwrap.visible{display:flex}
+.lockwrap .icon{font-size:38px;color:var(--text-muted)}
+.camscreen{background:#0a0a0a;color:#fff;min-height:600px;flex-direction:column}
+.camscreen .topbar2{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;z-index:2}
+.camscreen .closebtn{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.18);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.camscreen .preview{flex:1;background:linear-gradient(160deg,#232323,#0a0a0a);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.35);font-size:12px}
+.camscreen .shutter-row{padding:28px 0 40px;display:flex;justify-content:center}
+.shutter{width:72px;height:72px;border-radius:50%;background:#fff;border:none;cursor:pointer;position:relative}
+.shutter::after{content:"";position:absolute;inset:4px;border-radius:50%;border:2px solid rgba(0,0,0,.25)}
+.stagelabel{width:100%;text-align:center;font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:-20px}
+.howsection{margin-top:8px}
+.howsection h2{font-size:20px;font-weight:650;text-align:center;margin:0 0 6px}
+.howsection>p{font-size:13px;color:var(--text-secondary);text-align:center;max-width:520px;margin:0 auto 28px;line-height:1.5}
+.diagrams{display:flex;flex-direction:column;gap:36px}
+figure.diagram{margin:0;background:var(--surface-0);border:1px solid var(--border);border-radius:14px;padding:20px 20px 16px}
+figure.diagram svg{width:100%;height:auto;display:block;color:var(--diagram-ink)}
+figure.diagram figcaption{font-size:12.5px;color:var(--text-secondary);text-align:center;margin-top:10px;line-height:1.5}
+figure.diagram .fig-title{font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.plan-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:3px 8px;border-radius:20px;background:var(--bg-warning);color:var(--text-warning)}
+.misc-planned{margin-top:36px}
+.mini-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.mini-card{background:var(--surface-0);border:1px solid var(--border);border-radius:12px;padding:16px}
+.mini-card .icon{font-size:20px;color:var(--text-warning);margin-bottom:8px;display:block}
+.mini-card-title{font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:4px}
+.mini-card-sub{font-size:12px;color:var(--text-secondary);line-height:1.5}
+@media (max-width:720px){.mini-cards{grid-template-columns:1fr}}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+</style>
+</head>
+<body>
+
+<h2 class="sr-only">PatientBuddy screen-by-screen outline with diagrams showing how photos are stored, accessed, and shared</h2>
+
+<div class="page">
+
+<div class="masthead">
+  <h1>PatientBuddy</h1>
+  <p>Every screen the app has, and the three mechanisms underneath them worth seeing rather than reading: how a photo is stored, how it's unlocked, and what actually happens when you share it.</p>
+</div>
+
+<div class="tabnav">
+  <button class="active" data-tabbtn="home" onclick="show('home')"><span class="icon" data-icon="home"></span> Home</button>
+  <button data-tabbtn="talk" onclick="show('talk')"><span class="icon" data-icon="mic"></span> Talk</button>
+  <button data-tabbtn="records" onclick="show('records')"><span class="icon" data-icon="doc"></span> Records</button>
+  <button data-tabbtn="family" onclick="show('family')"><span class="icon" data-icon="users"></span> Family</button>
+  <button data-tabbtn="settings" onclick="show('settings')"><span class="icon" data-icon="settings"></span> Settings</button>
+</div>
+
+<div class="stage">
+<div class="phone">
+
+<!-- HOME -->
+<div class="screen active" id="s-home">
+  <div class="status-bar"><span>9:41</span><span class="icons"><span class="icon" data-icon="wifi"></span><span class="icon" data-icon="battery"></span></span></div>
+  <div class="top-bar">
+    <div class="title">Good morning, Asha</div>
+    <div style="display:flex;gap:12px">
+      <span class="icon" data-icon="bell" style="color:var(--text-secondary)"></span>
+      <span class="icon" data-icon="user-circle" style="color:var(--text-secondary)"></span>
+    </div>
+  </div>
+  <div class="content">
+    <div class="card" style="background:var(--bg-accent);border-color:var(--border-accent)">
+      <div class="card-title">Upcoming reminder</div>
+      <div class="card-sub">Thyroid pill due in 30 min</div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn" style="flex:1;padding:8px;font-size:13px">Snooze</button>
+        <button class="btn primary" style="flex:1;padding:8px;font-size:13px">Mark taken</button>
+      </div>
+    </div>
+    <div class="section-label">Quick actions</div>
+    <div class="grid2">
+      <div class="card" style="cursor:pointer" onclick="show('talk')">
+        <span class="icon" data-icon="mic" style="font-size:22px;color:var(--text-accent)"></span>
+        <div class="card-title" style="margin-top:6px">Talk to buddy</div>
+        <div class="card-sub">Start a voice session</div>
+      </div>
+      <div class="card" style="cursor:pointer" onclick="show('records')">
+        <span class="icon" data-icon="doc" style="font-size:22px;color:var(--text-accent)"></span>
+        <div class="card-title" style="margin-top:6px">My records</div>
+        <div class="card-sub">View health history</div>
+      </div>
+      <div class="card" style="cursor:pointer" onclick="show('family')">
+        <span class="icon" data-icon="users" style="font-size:22px;color:var(--text-accent)"></span>
+        <div class="card-title" style="margin-top:6px">Family</div>
+        <div class="card-sub">3 profiles active</div>
+      </div>
+      <div class="card" style="cursor:pointer" onclick="show('share')">
+        <span class="icon" data-icon="share" style="font-size:22px;color:var(--text-accent)"></span>
+        <div class="card-title" style="margin-top:6px">Share with doctor</div>
+        <div class="card-sub">Send visit summary</div>
+      </div>
+    </div>
+    <div class="section-label">Recent</div>
+    <div class="card">
+      <div class="row" style="padding-top:0">
+        <span class="icon" data-icon="stethoscope"></span>
+        <div class="row-text"><div class="row-label">Visit with Dr. Sharma</div><div class="row-sub">3 days ago · 3 action items</div></div>
+        <span class="badge">New</span>
+      </div>
+      <div class="row">
+        <span class="icon" data-icon="activity"></span>
+        <div class="row-text"><div class="row-label">BP trending up</div><div class="row-sub">Pattern noticed · 3 weeks</div></div>
+        <span class="badge warn">Alert</span>
+      </div>
+    </div>
+  </div>
+  <div class="nav">
+    <button class="nav-item active"><span class="icon" data-icon="home"></span><span class="nav-label">Home</span></button>
+    <button class="nav-item" onclick="show('talk')"><span class="icon" data-icon="mic"></span><span class="nav-label">Talk</span></button>
+    <button class="nav-item" onclick="show('records')"><span class="icon" data-icon="doc"></span><span class="nav-label">Records</span></button>
+    <button class="nav-item" onclick="show('family')"><span class="icon" data-icon="users"></span><span class="nav-label">Family</span></button>
+    <button class="nav-item" onclick="show('settings')"><span class="icon" data-icon="settings"></span><span class="nav-label">Settings</span></button>
+  </div>
+</div>
+
+<!-- TALK -->
+<div class="screen" id="s-talk">
+  <div class="status-bar"><span>9:41</span><span class="icon" data-icon="wifi"></span></div>
+  <div class="top-bar">
+    <button class="back" onclick="show('home')"><span class="icon" data-icon="chevron-left"></span> Home</button>
+    <div class="title">Talk</div>
+    <span style="font-size:12px;color:var(--text-muted)">English</span>
+  </div>
+  <div class="content" style="align-items:center;justify-content:center;gap:20px">
+    <div style="text-align:center">
+      <div style="font-size:14px;color:var(--text-secondary);margin-bottom:4px">What's on your mind?</div>
+      <div style="font-size:13px;color:var(--text-muted)">Tap the mic and speak</div>
+    </div>
+    <button class="voice-btn" aria-label="Start voice session"><span class="icon" data-icon="mic"></span></button>
+    <div style="width:100%">
+      <div class="section-label" style="margin-bottom:8px">Or choose a topic</div>
+      <div>
+        <span class="chip active"><span class="icon" data-icon="stethoscope"></span> Prepare for visit</span>
+        <span class="chip"><span class="icon" data-icon="pill"></span> Medicines</span>
+        <span class="chip"><span class="icon" data-icon="heart"></span> How I'm feeling</span>
+        <span class="chip"><span class="icon" data-icon="users"></span> Family member</span>
+      </div>
+    </div>
+    <div class="card" style="width:100%">
+      <div class="card-title">Last conversation</div>
+      <div class="card-sub">Yesterday · "My mother-in-law's BP was 140/90 after evening walk…"</div>
+      <button class="btn ghost" style="margin-top:8px;text-align:left;padding:4px 0">Continue this thread →</button>
+    </div>
+    <div class="card" style="width:100%;background:var(--bg-warning);border-color:transparent">
+      <div class="card-sub">Voice + AI responses aren't wired up yet — this screen is the interface only.</div>
+    </div>
+  </div>
+  <div class="nav">
+    <button class="nav-item" onclick="show('home')"><span class="icon" data-icon="home"></span><span class="nav-label">Home</span></button>
+    <button class="nav-item active"><span class="icon" data-icon="mic"></span><span class="nav-label">Talk</span></button>
+    <button class="nav-item" onclick="show('records')"><span class="icon" data-icon="doc"></span><span class="nav-label">Records</span></button>
+    <button class="nav-item" onclick="show('family')"><span class="icon" data-icon="users"></span><span class="nav-label">Family</span></button>
+    <button class="nav-item" onclick="show('settings')"><span class="icon" data-icon="settings"></span><span class="nav-label">Settings</span></button>
+  </div>
+</div>
+
+<!-- RECORDS -->
+<div class="screen" id="s-records">
+  <div class="status-bar"><span>9:41</span><span class="icon" data-icon="wifi"></span></div>
+  <div class="top-bar">
+    <button class="back" onclick="show('home')"><span class="icon" data-icon="chevron-left"></span> Home</button>
+    <div class="title">Records</div>
+    <button class="iconbtn" onclick="show('camera')" aria-label="Add record"><span class="icon" data-icon="plus"></span></button>
+  </div>
+  <div class="content">
+    <div class="tabs">
+      <div class="tab active">Visits</div>
+      <div class="tab">Medicines</div>
+      <div class="tab">Lab results</div>
+    </div>
+    <div class="card">
+      <div class="row" style="padding-top:0">
+        <span class="icon" data-icon="stethoscope"></span>
+        <div class="row-text"><div class="row-label">Dr. Sharma · Thyroid</div><div class="row-sub">12 Jun 2026 · TSH 7.2</div></div>
+        <button class="badge" style="border:none;cursor:pointer" onclick="show('share')">↗ Shared</button>
+      </div>
+      <div class="row" style="cursor:pointer" onclick="show('record-detail')">
+        <span class="icon" data-icon="stethoscope"></span>
+        <div class="row-text"><div class="row-label">Dr. Mehta · Anemia</div><div class="row-sub">3 Apr 2026 · Iron 10.3</div></div>
+        <div class="row-right"><span class="icon" data-icon="lock" aria-label="Encrypted"></span></div>
+      </div>
+      <div class="row" style="cursor:pointer" onclick="show('record-detail')">
+        <span class="icon" data-icon="stethoscope"></span>
+        <div class="row-text"><div class="row-label">Dr. Mehta · Anemia</div><div class="row-sub">14 Jan 2026 · Iron 9.1</div></div>
+        <div class="row-right"><span class="icon" data-icon="lock" aria-label="Encrypted"></span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Patterns noticed</div>
+      <div class="row" style="padding-top:8px">
+        <span class="icon" data-icon="trending-up"></span>
+        <div class="row-text"><div class="row-label">Iron improving</div><div class="row-sub">8.4 → 9.1 → 10.3 over 6 months</div></div>
+        <span class="badge ok">Good</span>
+      </div>
+      <div class="row">
+        <span class="icon" data-icon="trending-up"></span>
+        <div class="row-text"><div class="row-label">BP creeping up</div><div class="row-sub">3-month trend · flag at next visit</div></div>
+        <span class="badge warn">Watch</span>
+      </div>
+    </div>
+    <button class="btn" onclick="show('share')">Share a record with doctor</button>
+    <button class="btn ghost ghostcenter" onclick="toggleLock()"><span class="icon" data-icon="lock"></span>&nbsp;Demo: toggle Face ID lock</button>
+  </div>
+  <div class="nav">
+    <button class="nav-item" onclick="show('home')"><span class="icon" data-icon="home"></span><span class="nav-label">Home</span></button>
+    <button class="nav-item" onclick="show('talk')"><span class="icon" data-icon="mic"></span><span class="nav-label">Talk</span></button>
+    <button class="nav-item active"><span class="icon" data-icon="doc"></span><span class="nav-label">Records</span></button>
+    <button class="nav-item" onclick="show('family')"><span class="icon" data-icon="users"></span><span class="nav-label">Family</span></button>
+    <button class="nav-item" onclick="show('settings')"><span class="icon" data-icon="settings"></span><span class="nav-label">Settings</span></button>
+  </div>
+  <div class="lockwrap" id="lockwrap">
+    <span class="icon" data-icon="lock"></span>
+    <div style="font-size:15px;font-weight:700">Records Locked</div>
+    <div style="font-size:12px;color:var(--text-secondary);max-width:220px">Face ID or your passcode is required — nothing on this tab is decrypted until you unlock.</div>
+    <button class="btn primary" style="width:auto;padding:9px 20px" onclick="toggleLock()"><span class="icon" data-icon="face-id"></span>&nbsp;Unlock</button>
+  </div>
+</div>
+
+<!-- RECORD DETAIL -->
+<div class="screen" id="s-record-detail">
+  <div class="status-bar"><span>9:41</span><span class="icon" data-icon="wifi"></span></div>
+  <div class="top-bar">
+    <button class="back" onclick="show('records')"><span class="icon" data-icon="chevron-left"></span> Records</button>
+    <div class="title">Dr. Mehta · Anemia</div>
+    <div style="display:flex;gap:10px">
+      <button class="iconbtn" onclick="show('share')" aria-label="Share"><span class="icon" data-icon="share"></span></button>
+      <button class="iconbtn" style="color:var(--text-danger)" aria-label="Delete"><span class="icon" data-icon="trash"></span></button>
+    </div>
+  </div>
+  <div class="content" style="padding:0">
+    <div style="flex:1;background:linear-gradient(160deg,#2b2620,#1a1712);display:flex;align-items:center;justify-content:center;min-height:280px">
+      <span class="icon" data-icon="doc" style="font-size:40px;color:rgba(255,255,255,.3)"></span>
+    </div>
+    <div style="padding:14px;background:var(--surface-2)">
+      <div class="field" style="margin-bottom:10px">
+        <label>Title</label>
+        <input value="Dr. Mehta · Anemia follow-up" />
+      </div>
+      <div class="tabs" style="margin-bottom:0">
+        <div class="tab">Visits</div>
+        <div class="tab active">Medicines</div>
+        <div class="tab">Lab results</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CAMERA -->
+<div class="screen camscreen" id="s-camera">
+  <div class="topbar2">
+    <button class="closebtn" onclick="show('records')" aria-label="Close"><span class="icon" data-icon="x"></span></button>
+    <span></span>
+  </div>
+  <div class="preview">Live camera preview</div>
+  <div class="shutter-row">
+    <button class="shutter" aria-label="Capture" onclick="show('records')"></button>
+  </div>
+</div>
+
+<!-- FAMILY -->
+<div class="screen" id="s-family">
+  <div class="status-bar"><span>9:41</span><span class="icon" data-icon="wifi"></span></div>
+  <div class="top-bar">
+    <button class="back" onclick="show('home')"><span class="icon" data-icon="chevron-left"></span> Home</button>
+    <div class="title">Family</div>
+    <button class="iconbtn" style="color:var(--text-accent)" onclick="show('family-add')" aria-label="Add family member"><span class="icon" data-icon="plus"></span></button>
+  </div>
+  <div class="content">
+    <div class="section-label">Active profiles</div>
+    <div class="card">
+      <div class="row" style="padding-top:0">
+        <div class="avatar">AS</div>
+        <div class="row-text"><div class="row-label">Asha (you)</div><div class="row-sub">Thyroid · Anemia</div></div>
+        <span class="badge ok">Active</span>
+      </div>
+      <div class="row">
+        <div class="avatar" style="background:var(--bg-warning);color:var(--text-warning)">MK</div>
+        <div class="row-text"><div class="row-label">Mother-in-law</div><div class="row-sub">BP · Diabetes</div></div>
+        <span class="badge warn">BP alert</span>
+      </div>
+      <div class="row">
+        <div class="avatar" style="background:var(--bg-success);color:var(--text-success)">PK</div>
+        <div class="row-text"><div class="row-label">Daughter · Priya</div><div class="row-sub">Irregular periods</div></div>
+        <span class="badge ok">Next appt soon</span>
+      </div>
+    </div>
+    <div class="section-label">Consent status</div>
+    <div class="card">
+      <div class="card-sub" style="margin-bottom:8px">Each family member has given verbal consent, recorded on this device only — nothing is sent anywhere.</div>
+      <div class="row" style="padding-top:0">
+        <span class="icon" data-icon="shield-check" style="color:var(--text-success)"></span>
+        <div class="row-text"><div class="row-label">Mother-in-law</div><div class="row-sub">Consent recorded 3 Jan 2026</div></div>
+        <button class="btn ghost" style="padding:0;font-size:12px">Revoke</button>
+      </div>
+      <div class="row">
+        <span class="icon" data-icon="shield-check" style="color:var(--text-success)"></span>
+        <div class="row-text"><div class="row-label">Daughter · Priya</div><div class="row-sub">Consent recorded 5 Feb 2026</div></div>
+        <button class="btn ghost" style="padding:0;font-size:12px">Revoke</button>
+      </div>
+    </div>
+    <button class="btn primary">Switch to family member's profile</button>
+  </div>
+  <div class="nav">
+    <button class="nav-item" onclick="show('home')"><span class="icon" data-icon="home"></span><span class="nav-label">Home</span></button>
+    <button class="nav-item" onclick="show('talk')"><span class="icon" data-icon="mic"></span><span class="nav-label">Talk</span></button>
+    <button class="nav-item" onclick="show('records')"><span class="icon" data-icon="doc"></span><span class="nav-label">Records</span></button>
+    <button class="nav-item active"><span class="icon" data-icon="users"></span><span class="nav-label">Family</span></button>
+    <button class="nav-item" onclick="show('settings')"><span class="icon" data-icon="settings"></span><span class="nav-label">Settings</span></button>
+  </div>
+</div>
+
+<!-- FAMILY ADD -->
+<div class="screen" id="s-family-add">
+  <div class="status-bar"><span>9:41</span><span class="icon" data-icon="wifi"></span></div>
+  <div class="top-bar">
+    <button class="back" onclick="show('family')"><span class="icon" data-icon="chevron-left"></span> Family</button>
+    <div class="title">Add Family Member</div>
+    <span></span>
+  </div>
+  <div class="content">
+    <div class="field"><label>Name</label><input placeholder="Full name" /></div>
+    <div class="field"><label>Initials</label><input placeholder="e.g. MK" /></div>
+    <div class="field"><label>Conditions</label><input placeholder="Comma separated, e.g. BP, Diabetes" /></div>
+    <button class="btn primary" onclick="show('family')">Add Family Member</button>
+    <div class="card" style="background:var(--bg-accent);border-color:var(--border-accent)">
+      <div class="card-sub">Stored only on this device, alongside their consent record — no account or sign-up needed for them.</div>
+    </div>
+  </div>
+</div>
+
+<!-- SHARE -->
+<div class="screen" id="s-share">
+  <div class="status-bar"><span>9:41</span><span class="icon" data-icon="wifi"></span></div>
+  <div class="top-bar">
+    <button class="back" onclick="show('records')"><span class="icon" data-icon="chevron-left"></span> Records</button>
+    <div class="title">Share with doctor</div>
+    <span></span>
+  </div>
+  <div class="content">
+    <div class="card" style="background:var(--bg-accent);border-color:var(--border-accent)">
+      <div class="card-title">Visit summary · Dr. Sharma</div>
+      <div class="card-sub">12 Jun 2026 · Thyroid check · TSH 7.2</div>
+    </div>
+    <div class="section-label">Link expires after</div>
+    <div class="grid2">
+      <div class="card" style="cursor:pointer;text-align:center;border-color:var(--border-accent)">
+        <div style="font-size:15px;font-weight:700;color:var(--text-accent)">1 hour</div>
+      </div>
+      <div class="card" style="cursor:pointer;text-align:center">
+        <div style="font-size:15px;font-weight:700">24 hours</div>
+      </div>
+      <div class="card" style="cursor:pointer;text-align:center">
+        <div style="font-size:15px;font-weight:700">7 days</div>
+      </div>
+      <div class="card" style="cursor:pointer;text-align:center">
+        <div style="font-size:15px;font-weight:700">No expiry</div>
+        <div style="font-size:10px;color:var(--text-muted)">revoke manually</div>
+      </div>
+    </div>
+    <button class="btn primary" onclick="show('share-created')"><span class="icon" data-icon="send"></span>&nbsp; Create Share Link</button>
+  </div>
+</div>
+
+<!-- SHARE CREATED -->
+<div class="screen" id="s-share-created">
+  <div class="status-bar"><span>9:41</span><span class="icon" data-icon="wifi"></span></div>
+  <div class="top-bar">
+    <span></span>
+    <div class="title">Share with doctor</div>
+    <button class="iconbtn" onclick="show('records')" aria-label="Done">Done</button>
+  </div>
+  <div class="content">
+    <div class="card" style="text-align:center">
+      <span class="icon" data-icon="link" style="font-size:24px;color:var(--text-accent)"></span>
+      <div class="card-title" style="margin-top:8px">Link created</div>
+      <div class="card-sub" style="word-break:break-all;font-family:ui-monospace,monospace;font-size:11px;margin-top:6px">patientbuddy-share.app/view/8f2c…#k=9Lm2…</div>
+      <div class="card-sub" style="margin-top:8px">Shown once — copy or send it now.</div>
+    </div>
+    <button class="btn primary"><span class="icon" data-icon="send"></span>&nbsp; Send Link</button>
+    <button class="btn">Copy Link</button>
+    <button class="btn danger" onclick="show('records')">Revoke Access Now</button>
+    <div style="font-size:11px;color:var(--text-muted);text-align:center">Expires in 1 hour, or the moment you revoke it — whichever comes first.</div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="screen" id="s-settings">
+  <div class="status-bar"><span>9:41</span><span class="icon" data-icon="wifi"></span></div>
+  <div class="top-bar">
+    <button class="back" onclick="show('home')"><span class="icon" data-icon="chevron-left"></span> Home</button>
+    <div class="title">Settings</div>
+    <span></span>
+  </div>
+  <div class="content">
+    <div class="section-label">Language & voice</div>
+    <div class="card">
+      <div class="row" style="padding-top:0"><span class="icon" data-icon="globe"></span><div class="row-text"><div class="row-label">Language</div><div class="row-sub">English</div></div><span class="icon" data-icon="chevron-right" style="color:var(--text-muted)"></span></div>
+      <div class="row"><span class="icon" data-icon="volume"></span><div class="row-text"><div class="row-label">Voice speed</div><div class="row-sub">Normal</div></div><span class="icon" data-icon="chevron-right" style="color:var(--text-muted)"></span></div>
+    </div>
+    <div class="section-label">Privacy & storage</div>
+    <div class="card">
+      <div class="row" style="padding-top:0"><span class="icon" data-icon="lock"></span><div class="row-text"><div class="row-label">Cloud backup</div><div class="row-sub">Off by default</div></div><span class="icon" data-icon="chevron-right" style="color:var(--text-muted)"></span></div>
+      <div class="row"><span class="icon" data-icon="eye-off"></span><div class="row-text"><div class="row-label">Hide mode</div><div class="row-sub">Quick PIN-lock</div></div><span class="icon" data-icon="chevron-right" style="color:var(--text-muted)"></span></div>
+    </div>
+    <div class="section-label">Shared links</div>
+    <div class="card">
+      <div class="row" style="padding-top:0"><span class="icon" data-icon="link"></span><div class="row-text"><div class="row-label">Active links</div><div class="row-sub">1 link · expires in 1 hr</div></div><button class="btn ghost" style="padding:0;font-size:12px">Revoke</button></div>
+    </div>
+    <div class="section-label">Consent log</div>
+    <div class="card">
+      <div class="card-sub">All consent actions are stored on your device with timestamps.</div>
+      <button class="btn ghost" style="margin-top:6px;text-align:left;padding:4px 0" onclick="show('consent-history')">View consent history →</button>
+    </div>
+  </div>
+  <div class="nav">
+    <button class="nav-item" onclick="show('home')"><span class="icon" data-icon="home"></span><span class="nav-label">Home</span></button>
+    <button class="nav-item" onclick="show('talk')"><span class="icon" data-icon="mic"></span><span class="nav-label">Talk</span></button>
+    <button class="nav-item" onclick="show('records')"><span class="icon" data-icon="doc"></span><span class="nav-label">Records</span></button>
+    <button class="nav-item" onclick="show('family')"><span class="icon" data-icon="users"></span><span class="nav-label">Family</span></button>
+    <button class="nav-item active"><span class="icon" data-icon="settings"></span><span class="nav-label">Settings</span></button>
+  </div>
+</div>
+
+<!-- CONSENT HISTORY -->
+<div class="screen" id="s-consent-history">
+  <div class="status-bar"><span>9:41</span><span class="icon" data-icon="wifi"></span></div>
+  <div class="top-bar">
+    <button class="back" onclick="show('settings')"><span class="icon" data-icon="chevron-left"></span> Settings</button>
+    <div class="title">Consent History</div>
+    <span></span>
+  </div>
+  <div class="content">
+    <div class="card">
+      <div class="row" style="padding-top:0"><span class="icon" data-icon="shield-check" style="color:var(--text-success)"></span><div class="row-text"><div class="row-label">Mother-in-law</div><div class="row-sub">Consent granted · 3 Jan 2026, 4:12 PM</div></div></div>
+      <div class="row"><span class="icon" data-icon="shield-check" style="color:var(--text-success)"></span><div class="row-text"><div class="row-label">Daughter · Priya</div><div class="row-sub">Consent granted · 5 Feb 2026, 11:02 AM</div></div></div>
+      <div class="row"><span class="icon" data-icon="eye-off" style="color:var(--text-muted)"></span><div class="row-text"><div class="row-label">Mother-in-law</div><div class="row-sub">Consent revoked · 20 Feb 2026, 9:40 AM</div></div></div>
+      <div class="row"><span class="icon" data-icon="shield-check" style="color:var(--text-success)"></span><div class="row-text"><div class="row-label">Mother-in-law</div><div class="row-sub">Consent granted (again) · 21 Feb 2026, 8:03 AM</div></div></div>
+    </div>
+  </div>
+</div>
+
+</div>
+</div>
+
+<div class="howsection">
+  <h2>Three mechanisms, not six screens</h2>
+  <p>The interface above is what you touch. This is what actually happens underneath it — where the photo goes, what has to succeed before it's shown, and what a doctor's link can and can't do.</p>
+  <div class="diagrams">
+
+    <figure class="diagram">
+      <div class="fig-title">1 · How a photo is stored</div>
+      <svg viewBox="0 0 720 150" role="img" aria-label="Capturing a photo encrypts it immediately with AES-256-GCM before it is written into the app's private sandboxed storage, which no other app can read.">
+        <defs>
+          <marker id="arrow1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <polygon points="0 0, 10 5, 0 10" fill="currentColor"/>
+          </marker>
+        </defs>
+        <g font-family="var(--font-sans)" font-size="12" fill="currentColor">
+          <rect x="10" y="40" width="120" height="66" rx="10" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="70" y="68" text-anchor="middle" font-weight="700">Camera</text>
+          <text x="70" y="84" text-anchor="middle" fill="currentColor" opacity="0.65">capture</text>
+
+          <line x1="132" y1="73" x2="198" y2="73" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrow1)"/>
+          <text x="165" y="63" text-anchor="middle" font-size="10.5" opacity="0.75">captures</text>
+
+          <rect x="200" y="40" width="120" height="66" rx="10" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="260" y="68" text-anchor="middle" font-weight="700">Photo</text>
+          <text x="260" y="84" text-anchor="middle" font-size="10.5" opacity="0.65">in memory only</text>
+
+          <line x1="322" y1="73" x2="388" y2="73" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrow1)"/>
+          <text x="355" y="63" text-anchor="middle" font-size="10.5" opacity="0.75">encrypts</text>
+
+          <rect x="390" y="40" width="120" height="66" rx="10" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="450" y="68" text-anchor="middle" font-weight="700">Ciphertext</text>
+          <text x="450" y="84" text-anchor="middle" font-size="10.5" opacity="0.65">AES-256-GCM</text>
+
+          <line x1="512" y1="73" x2="578" y2="73" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrow1)"/>
+          <text x="545" y="63" text-anchor="middle" font-size="10.5" opacity="0.75">writes</text>
+
+          <rect x="580" y="34" width="130" height="78" rx="10" fill="var(--bg-accent)" stroke="var(--text-accent)" stroke-width="1.8"/>
+          <text x="645" y="60" text-anchor="middle" font-weight="700" fill="var(--text-accent)">App sandbox</text>
+          <text x="645" y="76" text-anchor="middle" font-size="9.5" fill="var(--text-accent)" opacity="0.85">device-only key</text>
+          <text x="645" y="90" text-anchor="middle" font-size="9.5" fill="var(--text-accent)" opacity="0.85">Files/Photos can't see it</text>
+        </g>
+      </svg>
+      <figcaption>The plaintext photo exists for a fraction of a second in memory. Everything that ever touches disk is already ciphertext, sitting in a folder no other app on the phone — including Files and Photos — is allowed to open.</figcaption>
+    </figure>
+
+    <figure class="diagram">
+      <div class="fig-title">2 · How it's accessed</div>
+      <svg viewBox="0 0 640 250" role="img" aria-label="Opening Records requires a Face ID or passcode check. If it fails, the app stays locked and nothing is decrypted. If it succeeds, the photo is decrypted in memory just to render it.">
+        <defs>
+          <marker id="arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <polygon points="0 0, 10 5, 0 10" fill="currentColor"/>
+          </marker>
+        </defs>
+        <g font-family="var(--font-sans)" font-size="12" fill="currentColor">
+          <rect x="250" y="10" width="140" height="50" rx="10" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="320" y="40" text-anchor="middle" font-weight="700">Open Records</text>
+
+          <line x1="320" y1="60" x2="320" y2="90" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrow2)"/>
+
+          <polygon points="320,88 400,128 320,168 240,128" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="320" y="123" text-anchor="middle" font-size="10.5">Face ID /</text>
+          <text x="320" y="136" text-anchor="middle" font-size="10.5">passcode</text>
+
+          <line x1="240" y1="128" x2="150" y2="128" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrow2)"/>
+          <text x="195" y="118" text-anchor="middle" font-size="10" opacity="0.75">fails</text>
+          <rect x="20" y="98" width="130" height="60" rx="10" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 3" opacity="0.8"/>
+          <text x="85" y="122" text-anchor="middle" font-weight="700" font-size="11.5">Stays locked</text>
+          <text x="85" y="137" text-anchor="middle" font-size="10" opacity="0.7">nothing decrypted</text>
+
+          <line x1="400" y1="128" x2="490" y2="128" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrow2)"/>
+          <text x="445" y="118" text-anchor="middle" font-size="10" opacity="0.75">succeeds</text>
+
+          <rect x="498" y="98" width="132" height="60" rx="10" fill="var(--bg-accent)" stroke="var(--text-accent)" stroke-width="1.6"/>
+          <text x="564" y="122" text-anchor="middle" font-weight="700" font-size="11.5" fill="var(--text-accent)">Decrypt in memory</text>
+          <text x="564" y="137" text-anchor="middle" font-size="10" fill="var(--text-accent)" opacity="0.85">key never leaves Keychain</text>
+
+          <line x1="564" y1="158" x2="564" y2="188" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrow2)"/>
+
+          <rect x="498" y="196" width="132" height="46" rx="10" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="564" y="224" text-anchor="middle" font-weight="700" font-size="11.5">Photo shown</text>
+        </g>
+      </svg>
+      <figcaption>The gate is binary: fail it, and the app never even attempts to decrypt anything. Succeed, and each photo is decrypted only in memory, only long enough to render — the key itself is never exposed, only its effect.</figcaption>
+    </figure>
+
+    <figure class="diagram">
+      <div class="fig-title">3 · What happens when you share a link</div>
+      <svg viewBox="0 0 700 350" role="img" aria-label="Sharing generates a one-time encryption key. The encrypted photo is uploaded to a server, but the key travels only inside the link itself, after a hash symbol, which browsers never send to any server. The recipient's browser fetches the ciphertext and combines it with the key from the link to decrypt locally. Revoking the link makes the server refuse to hand back the ciphertext at all.">
+        <defs>
+          <marker id="arrow3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <polygon points="0 0, 10 5, 0 10" fill="currentColor"/>
+          </marker>
+          <marker id="arrow3accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <polygon points="0 0, 10 5, 0 10" fill="var(--text-accent)"/>
+          </marker>
+        </defs>
+        <g font-family="var(--font-sans)" font-size="12" fill="currentColor">
+          <rect x="20" y="24" width="150" height="64" rx="10" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="95" y="52" text-anchor="middle" font-weight="700">Your phone</text>
+          <text x="95" y="68" text-anchor="middle" font-size="9.5" opacity="0.65">makes a one-time key</text>
+
+          <line x1="172" y1="56" x2="258" y2="56" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrow3)"/>
+          <text x="215" y="46" text-anchor="middle" font-size="10">uploads ciphertext</text>
+
+          <rect x="260" y="24" width="160" height="64" rx="10" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="340" y="50" text-anchor="middle" font-weight="700">Server</text>
+          <text x="340" y="65" text-anchor="middle" font-size="10" opacity="0.65">Supabase + Vercel</text>
+          <text x="340" y="78" text-anchor="middle" font-size="9" opacity="0.55">ciphertext only, ever</text>
+
+          <line x1="422" y1="56" x2="508" y2="56" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrow3)"/>
+          <text x="465" y="46" text-anchor="middle" font-size="10">if still valid</text>
+
+          <rect x="510" y="24" width="140" height="64" rx="10" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="580" y="52" text-anchor="middle" font-weight="700" font-size="11.5">Recipient's</text>
+          <text x="580" y="66" text-anchor="middle" font-weight="700" font-size="11.5">browser</text>
+
+          <path d="M 95 88 L 95 200 L 560 200 L 560 92" fill="none" stroke="var(--text-accent)" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arrow3accent)"/>
+          <rect x="50" y="187" width="200" height="26" rx="6" fill="var(--bg-page)"/>
+          <text x="150" y="204" text-anchor="middle" font-size="10.5" fill="var(--text-accent)" font-weight="600">key: never touches server</text>
+
+          <line x1="580" y1="88" x2="580" y2="208" stroke="var(--text-accent)" stroke-width="1.6" marker-end="url(#arrow3accent)"/>
+
+          <rect x="510" y="212" width="140" height="60" rx="10" fill="var(--bg-accent)" stroke="var(--text-accent)" stroke-width="1.6"/>
+          <text x="580" y="234" text-anchor="middle" font-weight="700" font-size="11" fill="var(--text-accent)">Decrypts locally</text>
+          <text x="580" y="250" text-anchor="middle" font-size="9" fill="var(--text-accent)" opacity="0.8">server never sees this</text>
+
+          <line x1="580" y1="272" x2="580" y2="296" stroke="var(--text-accent)" stroke-width="1.6" marker-end="url(#arrow3accent)"/>
+          <rect x="510" y="298" width="140" height="34" rx="8" fill="none" stroke="var(--text-accent)" stroke-width="1.4"/>
+          <text x="580" y="319" text-anchor="middle" font-weight="700" font-size="11" fill="var(--text-accent)">Photo shown</text>
+
+          <rect x="265" y="228" width="150" height="72" rx="10" fill="var(--bg-danger)" stroke="var(--text-danger)" stroke-width="1.4"/>
+          <text x="340" y="250" text-anchor="middle" font-weight="700" font-size="11" fill="var(--text-danger)">You tap Revoke</text>
+          <text x="340" y="266" text-anchor="middle" font-size="9.5" fill="var(--text-danger)" opacity="0.85">or it just expires</text>
+          <text x="340" y="281" text-anchor="middle" font-size="9.5" fill="var(--text-danger)" opacity="0.85">→ link now invalid</text>
+
+          <line x1="340" y1="228" x2="340" y2="88" stroke="var(--text-danger)" stroke-width="1.4" stroke-dasharray="3 3" marker-end="url(#arrow3)"/>
+        </g>
+      </svg>
+      <figcaption>The server only ever holds encrypted bytes — the key that could ever unlock them travels inside the link itself, in the part after <code>#</code>, which browsers never transmit anywhere. Revoke the link, or let it expire, and the server simply stops handing back the ciphertext at all — the recipient's browser has nothing left to decrypt.</figcaption>
+    </figure>
+
+    <figure class="diagram">
+      <div class="fig-title">4 · How Talk (the AI assistant) would work <span class="plan-tag">Planned — not built</span></div>
+      <svg viewBox="0 0 1030 150" role="img" aria-label="Tapping the mic would run on-device speech-to-text to get a transcript, send it with health context to an LLM backend that does not exist yet, get a response, and speak it back using on-device text-to-speech.">
+        <defs>
+          <marker id="arrow4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <polygon points="0 0, 10 5, 0 10" fill="currentColor"/>
+          </marker>
+        </defs>
+        <g font-family="var(--font-sans)" font-size="11.5" fill="currentColor">
+          <rect x="10" y="43" width="130" height="60" rx="10" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="75" y="70" text-anchor="middle" font-weight="700">Tap mic</text>
+          <text x="75" y="86" text-anchor="middle" font-size="9.5" opacity="0.65">already built</text>
+
+          <line x1="142" y1="73" x2="223" y2="73" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrow4)"/>
+          <text x="182" y="63" text-anchor="middle" font-size="9.5" opacity="0.75">speech-to-text</text>
+
+          <rect x="225" y="43" width="130" height="60" rx="10" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="290" y="70" text-anchor="middle" font-weight="700">Transcript</text>
+          <text x="290" y="86" text-anchor="middle" font-size="9.5" opacity="0.65">on-device, free</text>
+
+          <line x1="357" y1="73" x2="438" y2="73" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrow4)"/>
+          <text x="397" y="63" text-anchor="middle" font-size="9.5" opacity="0.75">sends transcript</text>
+
+          <rect x="440" y="37" width="150" height="72" rx="10" fill="var(--bg-warning)" stroke="var(--text-warning)" stroke-width="1.4" stroke-dasharray="4 3"/>
+          <text x="515" y="60" text-anchor="middle" font-weight="700" fill="var(--text-warning)">LLM backend</text>
+          <text x="515" y="75" text-anchor="middle" font-size="9.5" fill="var(--text-warning)" opacity="0.9">sees health context</text>
+          <text x="515" y="88" text-anchor="middle" font-size="9.5" fill="var(--text-warning)" opacity="0.9">cost/provider: TBD</text>
+
+          <line x1="592" y1="73" x2="673" y2="73" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrow4)"/>
+          <text x="632" y="63" text-anchor="middle" font-size="9.5" opacity="0.75">responds</text>
+
+          <rect x="675" y="43" width="130" height="60" rx="10" fill="none" stroke="currentColor" stroke-width="1.4"/>
+          <text x="740" y="70" text-anchor="middle" font-weight="700" font-size="11">Response text</text>
+
+          <line x1="807" y1="73" x2="888" y2="73" stroke="currentColor" stroke-width="1.4" marker-end="url(#arrow4)"/>
+          <text x="847" y="63" text-anchor="middle" font-size="9.5" opacity="0.75">text-to-speech</text>
+
+          <rect x="890" y="37" width="130" height="72" rx="10" fill="var(--bg-accent)" stroke="var(--text-accent)" stroke-width="1.6"/>
+          <text x="955" y="63" text-anchor="middle" font-weight="700" fill="var(--text-accent)">Spoken</text>
+          <text x="955" y="78" text-anchor="middle" font-weight="700" fill="var(--text-accent)">+ shown</text>
+          <text x="955" y="92" text-anchor="middle" font-size="9" fill="var(--text-accent)" opacity="0.8">to the user</text>
+        </g>
+      </svg>
+      <figcaption>Speech-to-text and text-to-speech are Apple's own on-device frameworks — free, private, and not much work to wire up. The one real gap is the box in the middle: which LLM answers the question, how much of the person's health record it's allowed to see, and what it costs per conversation — a hosting decision much like the share-link backend, just not made yet.</figcaption>
+    </figure>
+
+  </div>
+
+  <div class="misc-planned">
+    <div class="section-label" style="text-align:center;margin-bottom:12px">Smaller pieces, still interface only</div>
+    <div class="mini-cards">
+      <div class="mini-card">
+        <span class="icon" data-icon="lock"></span>
+        <div class="mini-card-title">Cloud backup</div>
+        <div class="mini-card-sub">Would upload the same already-encrypted files to iCloud — no new encryption to design, just wiring up CloudKit.</div>
+      </div>
+      <div class="mini-card">
+        <span class="icon" data-icon="eye-off"></span>
+        <div class="mini-card-title">Hide mode</div>
+        <div class="mini-card-sub">A second, separate PIN distinct from Face ID, for a faster lock/unlock that doesn't need biometrics.</div>
+      </div>
+      <div class="mini-card">
+        <span class="icon" data-icon="globe"></span>
+        <div class="mini-card-title">Language</div>
+        <div class="mini-card-sub">Apple's on-device speech framework already covers Hindi and English — mostly a picker and a locale switch away.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+const ICONS = {
+  home:'<path d="M4 11 12 4l8 7"/><path d="M6 10v9h5v-5h2v5h5v-9"/>',
+  mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="9" y1="21" x2="15" y2="21"/>',
+  doc:'<path d="M7 3h7l4 4v14H7z"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="15" y2="16"/>',
+  users:'<circle cx="9" cy="8" r="3"/><path d="M4 20c0-3 2.5-5 5-5s5 2 5 5"/><circle cx="17" cy="9" r="2.5"/><path d="M15 20c0-2.2 1.6-4 4-4"/>',
+  settings:'<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M3 12h3M18 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
+  bell:'<path d="M7 10a5 5 0 0 1 10 0c0 4 1.5 5 1.5 5h-13S7 14 7 10Z"/><path d="M10 19a2 2 0 0 0 4 0"/>',
+  "user-circle":'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="10" r="3"/><path d="M6 19c1-3 3.5-4 6-4s5 1 6 4"/>',
+  share:'<circle cx="6" cy="12" r="2.2"/><circle cx="18" cy="6" r="2.2"/><circle cx="18" cy="18" r="2.2"/><line x1="8" y1="11" x2="16" y2="7"/><line x1="8" y1="13" x2="16" y2="17"/>',
+  stethoscope:'<path d="M6 4v6a4 4 0 0 0 8 0V4"/><line x1="6" y1="4" x2="4.5" y2="4"/><line x1="14" y1="4" x2="15.5" y2="4"/><circle cx="18.5" cy="14.5" r="2"/><path d="M10 10v3a5 5 0 0 0 5 5"/>',
+  activity:'<polyline points="3 12 8 12 10 6 14 18 16 12 21 12"/>',
+  "chevron-left":'<polyline points="15 5 9 12 15 19"/>',
+  "chevron-right":'<polyline points="9 5 15 12 9 19"/>',
+  download:'<path d="M12 4v11"/><polyline points="8 11 12 15 16 11"/><path d="M5 18h14"/>',
+  plus:'<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  pill:'<rect x="4" y="10" width="16" height="7" rx="3.5" transform="rotate(-30 12 13)"/><line x1="12" y1="9.3" x2="12" y2="16.7" transform="rotate(-30 12 13)"/>',
+  heart:'<path d="M12 20s-7-4.5-9.3-9A5 5 0 0 1 12 6a5 5 0 0 1 9.3 5c-2.3 4.5-9.3 9-9.3 9Z"/>',
+  leaf:'<path d="M5 19C5 10 11 4 20 4c0 9-6 15-15 15Z"/><path d="M5 19c3-3 6-6 12-11"/>',
+  lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  "trending-up":'<polyline points="4 16 10 10 14 14 20 6"/><polyline points="15 6 20 6 20 11"/>',
+  "shield-check":'<path d="M12 3l7 3v6c0 5-3.5 7.5-7 9-3.5-1.5-7-4-7-9V6Z"/><polyline points="9 12 11 14 15 10"/>',
+  link:'<path d="M9 15l6-6"/><path d="M8 12l-2 2a3.5 3.5 0 0 0 5 5l2-2"/><path d="M16 12l2-2a3.5 3.5 0 0 0-5-5l-2 2"/>',
+  trash:'<polyline points="4 7 20 7"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/><path d="M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13"/>',
+  globe:'<circle cx="12" cy="12" r="9"/><line x1="3" y1="12" x2="21" y2="12"/><path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18Z"/>',
+  volume:'<polygon points="4 9 8 9 12 5 12 19 8 15 4 15"/><path d="M16 8a5 5 0 0 1 0 8"/>',
+  "eye-off":'<path d="M3 3l18 18"/><path d="M10.6 5.1A10.9 10.9 0 0 1 12 5c5 0 9 4 10 7-0.4 1.2-1.2 2.6-2.4 3.9M6.6 6.6C4.6 8 3.3 9.9 2 12c1 3 5 7 10 7 1.2 0 2.3-.2 3.4-.6"/><circle cx="12" cy="12" r="3"/>',
+  send:'<line x1="4" y1="20" x2="20" y2="4"/><polygon points="20 4 13 10 9 21 6 12 20 4"/>',
+  check:'<polyline points="5 13 10 18 19 6"/>',
+  x:'<line x1="6" y1="6" x2="18" y2="18"/><line x1="6" y1="18" x2="18" y2="6"/>',
+  camera:'<path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13.5" r="3.5"/>',
+  "face-id":'<path d="M4 9V6a2 2 0 0 1 2-2h3M20 9V6a2 2 0 0 0-2-2h-3M4 15v3a2 2 0 0 0 2 2h3M20 15v3a2 2 0 0 1-2 2h-3"/><line x1="9" y1="10" x2="9" y2="12"/><line x1="15" y1="10" x2="15" y2="12"/><path d="M9 15c1 1 5 1 6 0"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 16 14"/>',
+  wifi:'<path d="M2 8.5a16 16 0 0 1 20 0"/><path d="M5.5 12.5a11 11 0 0 1 13 0"/><path d="M9 16.5a5.5 5.5 0 0 1 6 0"/><circle cx="12" cy="19.5" r="1" fill="currentColor" stroke="none"/>',
+  battery:'<rect x="2" y="9" width="17" height="6" rx="1.5"/><line x1="21" y1="11" x2="21" y2="13"/>'
+};
+function paintIcons(){
+  document.querySelectorAll('[data-icon]').forEach(function(el){
+    const name = el.getAttribute('data-icon');
+    const inner = ICONS[name] || '';
+    el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+inner+'</svg>';
+  });
+}
+function show(id){
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  const target = document.getElementById('s-'+id);
+  if (target) target.classList.add('active');
+
+  const topLevel = ['home','talk','records','family','settings'];
+  if (topLevel.indexOf(id) !== -1){
+    document.querySelectorAll('[data-tabbtn]').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-tabbtn') === id);
+    });
+  }
+}
+function toggleLock(){
+  document.getElementById('lockwrap').classList.toggle('visible');
+}
+paintIcons();
+</script>
+</body>
+</html>
