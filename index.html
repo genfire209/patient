@@ -854,6 +854,64 @@ figure.diagram .fig-title{font-size:13px;font-weight:700;color:var(--text-primar
       <figcaption>Metadata stripping and downsampling embedded images are most of what "compressing a PDF" actually means — the same idea WhatsApp applies to photos and video before they ever leave your phone. The order matters: this has to happen before encryption, not after, because ciphertext is already high-entropy noise with no repeating patterns left for a compressor to find.</figcaption>
     </figure>
 
+    <figure class="diagram">
+      <div class="fig-title">8 · The whole system at a glance</div>
+      <svg viewBox="0 0 900 500" role="img" aria-label="Four pieces make up the whole system. Your phone holds the camera, records, family profiles, talk interface, and the encryption key, and is the only place plaintext ever exists. It uploads ciphertext to the real share backend, which serves it to a recipient's browser only if the link is still valid, while the decryption key travels to that browser directly through the link, never through any server. Separately, a planned Buddy Server would handle accounts, family authorization, the Talk LLM, and analytics, none of which exist yet.">
+        <defs>
+          <marker id="arrow8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <polygon points="0 0, 10 5, 0 10" fill="currentColor"/>
+          </marker>
+          <marker id="arrow8accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <polygon points="0 0, 10 5, 0 10" fill="var(--text-accent)"/>
+          </marker>
+          <marker id="arrow8warn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <polygon points="0 0, 10 5, 0 10" fill="var(--text-warning)"/>
+          </marker>
+        </defs>
+        <g font-family="var(--font-sans)" font-size="11.5" fill="currentColor">
+          <rect x="20" y="160" width="220" height="140" rx="12" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <text x="130" y="184" text-anchor="middle" font-weight="700" font-size="12.5">Your Phone</text>
+          <text x="130" y="206" text-anchor="middle" font-size="9.5" opacity="0.7">Camera · Records · Family</text>
+          <text x="130" y="222" text-anchor="middle" font-size="9.5" opacity="0.7">Talk UI · Settings</text>
+          <text x="130" y="242" text-anchor="middle" font-size="9.5" opacity="0.85">Keychain: device-only key</text>
+          <text x="130" y="262" text-anchor="middle" font-size="9" opacity="0.55">only place plaintext exists</text>
+
+          <rect x="340" y="40" width="220" height="110" rx="12" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <text x="450" y="64" text-anchor="middle" font-weight="700" font-size="12.5">Share Backend</text>
+          <text x="450" y="82" text-anchor="middle" font-size="9" opacity="0.55">built</text>
+          <text x="450" y="100" text-anchor="middle" font-size="9.5" opacity="0.7">Vercel + Supabase</text>
+          <text x="450" y="117" text-anchor="middle" font-size="9.5" opacity="0.7">ciphertext only, ever</text>
+
+          <rect x="660" y="40" width="220" height="110" rx="12" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <text x="770" y="64" text-anchor="middle" font-weight="700" font-size="12.5">Recipient's Browser</text>
+          <text x="770" y="82" text-anchor="middle" font-size="9" opacity="0.55">built</text>
+          <text x="770" y="102" text-anchor="middle" font-size="9.5" opacity="0.7">decrypts using</text>
+          <text x="770" y="118" text-anchor="middle" font-size="9.5" opacity="0.7">the link's key</text>
+
+          <rect x="340" y="320" width="540" height="140" rx="12" fill="var(--bg-warning)" stroke="var(--text-warning)" stroke-width="1.6" stroke-dasharray="5 4"/>
+          <text x="610" y="345" text-anchor="middle" font-weight="700" font-size="12.5" fill="var(--text-warning)">Buddy Server</text>
+          <text x="610" y="363" text-anchor="middle" font-size="9" fill="var(--text-warning)" opacity="0.75">planned — not built</text>
+          <text x="610" y="386" text-anchor="middle" font-size="9.5" fill="var(--text-warning)" opacity="0.9">Accounts / Client IDs · Family Authorization</text>
+          <text x="610" y="404" text-anchor="middle" font-size="9.5" fill="var(--text-warning)" opacity="0.9">Talk's LLM backend · Patient Analytics</text>
+
+          <line x1="242" y1="205" x2="338" y2="120" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrow8)"/>
+          <text x="290" y="150" text-anchor="middle" font-size="9.5" opacity="0.75">uploads</text>
+          <text x="290" y="162" text-anchor="middle" font-size="9.5" opacity="0.75">ciphertext</text>
+
+          <line x1="562" y1="95" x2="658" y2="95" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrow8)"/>
+          <text x="610" y="85" text-anchor="middle" font-size="9.5" opacity="0.75">if still valid</text>
+
+          <path d="M 130 158 L 130 18 L 770 18 L 770 38" fill="none" stroke="var(--text-accent)" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#arrow8accent)"/>
+          <rect x="360" y="6" width="180" height="22" rx="6" fill="var(--bg-page)"/>
+          <text x="450" y="21" text-anchor="middle" font-size="10" fill="var(--text-accent)" font-weight="600">key travels via the link</text>
+
+          <line x1="150" y1="302" x2="420" y2="318" stroke="var(--text-warning)" stroke-width="1.5" stroke-dasharray="3 3" marker-end="url(#arrow8warn)"/>
+          <text x="270" y="316" text-anchor="middle" font-size="9.5" fill="var(--text-warning)">requests</text>
+        </g>
+      </svg>
+      <figcaption>Solid lines are real and working today; the dashed warning-colored box and its one dashed arrow are the entire "planned" side of the system, and nothing currently reaches it — the phone doesn't create accounts, request family authorization, talk to an LLM, or send analytics anywhere yet. Everything real about this app happens between the phone and the share backend, and the one thing that never touches either server is the decryption key itself.</figcaption>
+    </figure>
+
   </div>
 
   <div class="misc-planned">
